@@ -28,13 +28,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/produtos/{id}', [ProdutoController::class, 'update'])->name('produtos.update');
     Route::delete('/produtos/{id}', [ProdutoController::class, 'destroy'])->name('produtos.destroy');
 
-    // Rotas para vendas
-    Route::get('/vendas', [VendaController::class, 'index'])->name('vendas.index');
-    Route::get('/vendas/create', [VendaController::class, 'create'])->name('vendas.create');
-    Route::post('/vendas', [VendaController::class, 'store'])->name('vendas.store');
-    Route::get('/vendas/{id}/edit', [VendaController::class, 'edit'])->name('vendas.edit');
-    Route::patch('/vendas/{id}', [VendaController::class, 'update'])->name('vendas.update');
-    Route::delete('/vendas/{id}', [VendaController::class, 'destroy'])->name('vendas.destroy');
-});
+     // Rotas para vendas
+     Route::get('/vendas', [VendaController::class, 'index'])->name('vendas.index');
+     Route::post('/vendas/add-to-cart/{id}', [VendaController::class, 'addToCart'])->name('addToCart');
+     Route::get('/vendas/remove-from-cart/{id}', [VendaController::class, 'removeFromCart'])->name('removeFromCart');
+     Route::post('/vendas/checkout', [VendaController::class, 'checkout'])->name('vendas.checkout');
+     Route::post('/vendas/add-multiple-to-cart', [VendaController::class, 'addMultipleToCart'])->name('addMultipleToCart');
+ });
 
 require __DIR__.'/auth.php';

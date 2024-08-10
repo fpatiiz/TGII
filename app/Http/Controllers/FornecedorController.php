@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Fornecedor;
+use App\Models\Venda;
+use App\Models\Produto;
 
 class FornecedorController extends Controller
 {

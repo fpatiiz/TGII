@@ -16,12 +16,12 @@
     <span class="text-[15px] ml-4 text-gray-200">Home</span>
 </a>
 
-<a href="{{ route('dashboard') }}" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-gray-600 text-white">
+<a href="{{ route('produtos.index') }}" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-gray-600 text-white">
     <i class="bi bi-list-task"></i>
     <span class="text-[15px] ml-4 text-gray-200">Meus Produtos</span>
 </a>
 
-<a href="{{ route('dashboard') }}" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-gray-600 text-white">
+<a href="{{ route('vendas.index') }}" class="p-2.5 mt-3 flex items-center rounded-md px-4 duration-300 cursor-pointer hover:bg-gray-600 text-white">
     <i class="bi bi-cart4"></i>
     <span class="text-[15px] ml-4 text-gray-200">Área de Vendas</span>
 </a>
