@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB; // Adicione esta linha
+
 
 class Produto extends Model
 {
@@ -13,24 +15,13 @@ class Produto extends Model
 
     protected $fillable = ['nome', 'descricao', 'preco', 'quantidade'];
 
-
-    public function scopeMaisVendidos($query)
-
+    public function vendas()
     {
-
-        return $query->orderBy('produtos.id', 'desc')
-
-        ->limit(5);
-
+        return $this->hasMany(Venda::class);
     }
 
-    public function vendas()
-{
-    return $this->hasMany(Venda::class);
-}
-
-public function scopeWithFornecedor($query)
-{
-    return $query->join('fornecedores', 'produtos.fornecedor_id', '=', 'fornecedores.id');
-}
+    public function fornecedor()
+    {
+        return $this->belongsTo(Fornecedor::class);
+    }
 }

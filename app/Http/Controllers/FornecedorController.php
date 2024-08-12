@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Fornecedor;
 use App\Models\Venda;
 use App\Models\Produto;
+use App\Models\Fornecedor;
+use App\Models\User;
+use App\Models\Dashboard;
+use App\Models\CartItem;
 
 class FornecedorController extends Controller
 {

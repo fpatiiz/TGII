@@ -1,12 +1,16 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Venda;
 use App\Models\Produto;
+use App\Models\Fornecedor;
+use App\Models\User;
+use App\Models\Dashboard;
+use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class VendaController extends Controller
 {
@@ -18,11 +22,6 @@ class VendaController extends Controller
         $carrinho = $user ? $user->vendas : collect(); // Usar coleção vazia se o usuário não estiver autenticado
         $total = $carrinho->sum('valor_total');
 
-        // Se o usuário selecionou produtos para adicionar ao carrinho
-        if ($request->has('produtos')) {
-            $this->addMultipleToCart($request);
-        }
-
         return view('vendas.index', compact('produtos', 'carrinho', 'total'));
     }
 
@@ -30,125 +29,134 @@ class VendaController extends Controller
     public function addMultipleToCart(Request $request)
     {
         $produtosSelecionados = $request->input('produtos', []);
+        $quantidades = $request->input('quantidades', []);
+    
         $user = Auth::user();
-
+    
         foreach ($produtosSelecionados as $produtoId) {
             $produto = Produto::find($produtoId);
-
+    
             if ($produto) {
                 $existingItem = $user->vendas()->where('produto_id', $produtoId)->first();
-
+    
                 if ($existingItem) {
-                    $existingItem->quantidade_vendida += 1;
-                    $existingItem->valor_total = $produto->preco * $existingItem->quantidade_vendida;
-                    $existingItem->save();
+                    $quantityToAdd = $quantidades[$produtoId];
+    
+                    if ($produto->quantidade >= $existingItem->quantidade_vendida + $quantityToAdd) {
+                        $existingItem->quantidade_vendida += $quantityToAdd;
+                        $existingItem->valor_total = $produto->preco * $existingItem->quantidade_vendida;
+                        $existingItem->save();
+    
+                        $produto->quantidade -= $quantityToAdd;
+                        $produto->save();
+                    } else {
+                        return redirect()->route('vendas.index')->with('error', 'Quantidade insuficiente para o produto: ' . $produto->nome);
+                    }
                 } else {
-                    $venda = new Venda();
-                    $venda->user_id = $user->id;
-                    $venda->produto_id = $produtoId;
-                    $venda->valor_total = $produto->preco;
-                    $venda->quantidade_vendida = 1;
-                    $venda->save();
+                    $quantityToAdd = $quantidades[$produtoId];
+    
+                    if ($produto->quantidade >= $quantityToAdd) {
+                        $venda = new Venda();
+                        $venda->user_id = $user->id;
+                        $venda->produto_id = $produtoId;
+                        $venda->valor_total = $produto->preco * $quantityToAdd;
+                        $venda->quantidade_vendida = $quantityToAdd;
+                        $venda->save();
+    
+                        $produto->quantidade -= $quantityToAdd;
+                        $produto->save();
+                    } else {
+                        return redirect()->route('vendas.index')->with('error', 'Quantidade insuficiente para o produto: ' . $produto->nome);
+                    }
                 }
             }
         }
-
+    
         return redirect()->route('vendas.index');
     }
-
     // Remove um produto do carrinho
-    public function removeFromCart($id)
+    public function removeFromCart(Request $request, $itemId)
     {
         $user = Auth::user();
         if ($user) {
-            $user->vendas()->where('produto_id', $id)->delete();
+            $item = $user->vendas()->where('id', $itemId)->first();
+    
+            if ($item) {
+                $quantityToRemove = $request->input('quantity', 1);
+    
+                if ($quantityToRemove < 1) {
+                    return redirect()->route('vendas.index')->with('error', 'Quantidade inválida para remover.');
+                }
+    
+                if ($quantityToRemove >= $item->quantidade_vendida) {
+                    // Remove o item do carrinho
+                    $user->vendas()->where('id', $itemId)->delete();
+    
+                    // Retorna a quantidade total para o estoque
+                    $produto = Produto::find($item->produto_id);
+                    if ($produto) {
+                        $produto->quantidade += $item->quantidade_vendida;
+                        $produto->save();
+                    }
+                } else {
+                    // Atualiza a quantidade do item no carrinho
+                    $item->quantidade_vendida -= $quantityToRemove;
+                    $item->valor_total = $item->produto->preco * $item->quantidade_vendida;
+                    $item->save();
+    
+                    // Retorna a quantidade removida para o estoque
+                    $produto = Produto::find($item->produto_id);
+                    if ($produto) {
+                        $produto->quantidade += $quantityToRemove;
+                        $produto->save();
+                    }
+                }
+            }
         }
         return redirect()->route('vendas.index');
     }
-
-    // Exibe o carrinho do usuário
-    public function cart()
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return redirect()->route('vendas.index')->with('error', 'Você precisa estar logado para acessar o carrinho.');
-        }
-        $carrinho = $user->vendas;
-        $total = $carrinho->sum('valor_total');
-        $produtos = Produto::all(); // Adiciona produtos para exibir na visão
-        return view('vendas.index', compact('carrinho', 'total', 'produtos'));
-    }
-
+    
     // Finaliza a compra
     public function checkout()
-
     {
-    
         $user = Auth::user();
-    
         $carrinho = $user->vendas;
-    
-    
+
         if ($carrinho->isEmpty()) {
-    
             return redirect()->route('vendas.index')->with('error', 'Seu carrinho está vazio.');
-    
         }
-    
-    
+
         DB::beginTransaction();
-    
+
         try {
-    
             foreach ($carrinho as $item) {
-    
                 $produto = Produto::find($item->produto_id);
-    
-    
+
                 if ($produto->quantidade < $item->quantidade_vendida) {
-    
                     DB::rollBack();
-    
                     return redirect()->route('vendas.index')->with('error', 'Quantidade insuficiente para o produto: ' . $produto->nome);
-    
                 }
-    
-    
+
                 $produto->quantidade -= $item->quantidade_vendida;
-    
                 $produto->save();
-    
-    
-                // Removi a linha que tentava salvar o campo 'data_venda'
-    
+
                 $venda = new Venda();
-    
                 $venda->user_id = $user->id;
-    
                 $venda->produto_id = $item->produto_id;
-    
                 $venda->valor_total = $item->valor_total;
-    
                 $venda->quantidade_vendida = $item->quantidade_vendida;
-    
                 $venda->save();
-    
             }
-    
-    
+
             $user->vendas()->delete();
-    
             DB::commit();
-    
-    
+
             return redirect()->route('vendas.index')->with('success', 'Compra finalizada com sucesso!');
-    
         } catch (\Exception $e) {
-    
             DB::rollBack();
-    
             return redirect()->route('vendas.index')->with('error', 'Ocorreu um erro ao processar a compra. Tente novamente.');
-    
         }
+    }
+
     
-    }}
+}
