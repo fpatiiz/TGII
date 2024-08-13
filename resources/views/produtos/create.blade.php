@@ -62,6 +62,7 @@
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                                         <button type="submit" class="btn btn-primary">Criar fornecedor</button>
                                     </div>
+                                    
                                 </div>
                             </div>
                         </div>

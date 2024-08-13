@@ -17,7 +17,7 @@ class VendaController extends Controller
     // Exibe a lista de produtos e o carrinho
     public function index(Request $request)
     {
-        $produtos = Produto::all();
+        $produtos = Produto::paginate(9);
         $user = Auth::user();
         $carrinho = $user ? $user->vendas : collect(); // Usar coleção vazia se o usuário não estiver autenticado
         $total = $carrinho->sum('valor_total');
@@ -25,6 +25,8 @@ class VendaController extends Controller
         return view('vendas.index', compact('produtos', 'carrinho', 'total'));
     }
 
+
+    
     // Adiciona múltiplos produtos ao carrinho
     public function addMultipleToCart(Request $request)
     {

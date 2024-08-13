@@ -17,7 +17,7 @@ class ProdutoController extends Controller
     public function index()
     {
        
-        $produtos = Produto::with('fornecedor')->paginate(7); // 7 produtos por página
+        $produtos = Produto::with('fornecedor')->paginate(12); // 12 produtos por página
 
         return view('produtos.index', compact('produtos'));
     }

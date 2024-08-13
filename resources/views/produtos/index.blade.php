@@ -8,17 +8,17 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto sm:px-15 lg:px-30">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <!-- Botão para criar produto -->
-                    <div class="mb-4">
+                    <div class="mb-2">
                         <a href="{{ route('produtos.create') }}" class="btn btn-primary">
                             <i class="bi bi-plus-circle"></i> Criar produto
                         </a>
                     </div>
 
-                    <table class="table table-striped">
+                    <table class="table table-sm small table-responsive mb-2">                        
                         <thead>
                             <tr>
                                 <th>Nome</th>
@@ -34,8 +34,7 @@
                             <tr>
                                 <td>{{ $produto->nome }}</td>
                                 <td>{{ $produto->descricao }}</td>
-                                <td>{{ $produto->preco }}</td>
-                                <td>{{ $produto->quantidade }}</td>
+                                <td>R$ {{ number_format($produto->preco, 2, ',', '.') }}</td>                                <td>{{ $produto->quantidade }}</td>
                                 <td>{{ $produto->fornecedor->nome }}</td>
                                 <td>
                                    <!-- Formulário para editar o produto -->
@@ -61,7 +60,7 @@
 
                     <!-- Links de paginação -->
                     <div class="mt-4">
-                        {{ $produtos->links() }}
+                    {{ $produtos->render('pagination::bootstrap-5') }}
                     </div>
 
                     
